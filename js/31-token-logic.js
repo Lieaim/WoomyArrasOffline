@@ -88,7 +88,8 @@
                     adminHolder.style.height = 0;
                     adminHolder.style.opacity = 0;
                     adminHolder.innerHTML += `<center><h2>Test Panel</h2></center>`;
-                    adminHolder.innerHTML += `<div class="test-panel-section"><p class="test-panel-title">Testing Actions</p><p class="test-panel-note">Edits apply to your current tank. Score changes are capped at 100,000,000 server-side.</p><label>Score Delta (+/-): </label><input id="Woomy_AdminScoreDelta" tabindex="-1" type="number" step="1" min="-100000000" max="100000000" value="1000"></br><button id="Woomy_AdminApplyScoreDelta">Apply Score Delta</button></br><label>Set Score: </label><input id="Woomy_AdminSetScore" tabindex="-1" type="number" step="1" min="0" max="100000000" value="0"></br><button id="Woomy_AdminApplySetScore">Set Score</button></br><p class="test-panel-note">Skill points are separate from score. Use these to test builds quickly.</p><label>Skill Point Delta (+/-): </label><input id="Woomy_AdminPointsDelta" tabindex="-1" type="number" step="1" value="1"></br><button id="Woomy_AdminApplyPointsDelta">Apply Skill Delta</button></br><label>Set Skill Points: </label><input id="Woomy_AdminSetPoints" tabindex="-1" type="number" step="1" value="0"></br><button id="Woomy_AdminApplySetPoints">Set Skill Points</button></br></div>`;
+                    adminHolder.innerHTML += `<div class="test-panel-section"><p class="test-panel-title">Testing Actions</p><p class="test-panel-note">Edits apply to your current tank. Score changes support up to 9,007,199,254,740,991.</p><label>Score Delta (+/-): </label><input id="Woomy_AdminScoreDelta" tabindex="-1" type="number" step="1" min="-9007199254740991" max="9007199254740991" value="1000"></br><button id="Woomy_AdminApplyScoreDelta">Apply Score Delta</button></br><label>Set Score: </label><input id="Woomy_AdminSetScore" tabindex="-1" type="number" step="1" min="0" max="9007199254740991" value="0"></br><button id="Woomy_AdminApplySetScore">Set Score</button></br><p class="test-panel-note">Skill points are separate from score. Use these to test builds quickly.</p><label>Skill Point Delta (+/-): </label><input id="Woomy_AdminPointsDelta" tabindex="-1" type="number" step="1" value="1"></br><button id="Woomy_AdminApplyPointsDelta">Apply Skill Delta</button></br><label>Set Skill Points: </label><input id="Woomy_AdminSetPoints" tabindex="-1" type="number" step="1" value="0"></br><button id="Woomy_AdminApplySetPoints">Set Skill Points</button></br></div>`;
+                    adminHolder.innerHTML += `<div class="test-panel-section"><p class="test-panel-title">Growth Mode</p><p class="test-panel-note">Developer token required. Applies to your current tank in growth modes. Multiplies score-based size, health and barrel growth; score and skill points stay the same. 1 = normal, 0 = no extra growth. Resets on respawn.</p><label>Growth Multiplier (0–100): </label><input id="Woomy_AdminGrowthMultiplier" tabindex="-1" type="number" min="0" max="100" step="0.1" value="1"></br><button id="Woomy_AdminApplyGrowthMultiplier">Apply Growth Multiplier</button></div>`;
                     const adminBossOptionGroups = [{
                         label: null,
                         options: [{ value: 0, label: "Random" }]
@@ -437,6 +438,12 @@
                         adminShapeSelect.addEventListener("change", () => setAdminSpawnMode("shape"));
                         adminShapeSelect.addEventListener("focus", () => setAdminSpawnMode("shape"));
                     }
+                    document.getElementById("Woomy_AdminApplyGrowthMultiplier").onclick = () => {
+                        if (!hasDevToken()) return;
+                        const input = document.getElementById("Woomy_AdminGrowthMultiplier");
+                        if (!input.reportValidity() || input.value.trim() === "") return;
+                        sendAdminPacket("growth_multiplier", input.value);
+                    };
                     document.getElementById("Woomy_AdminApplyScoreDelta").onclick = () => sendAdminPacket("score_delta", document.getElementById("Woomy_AdminScoreDelta").value);
                     document.getElementById("Woomy_AdminApplySetScore").onclick = () => sendAdminPacket("score_set", document.getElementById("Woomy_AdminSetScore").value);
                     document.getElementById("Woomy_AdminApplyPointsDelta").onclick = () => sendAdminPacket("points_delta", document.getElementById("Woomy_AdminPointsDelta").value);
@@ -473,6 +480,7 @@
                             if ("Enter" === event.key) btn.click();
                         });
                     };
+                    bindAdminEnter("Woomy_AdminGrowthMultiplier", "Woomy_AdminApplyGrowthMultiplier");
                     bindAdminEnter("Woomy_AdminScoreDelta", "Woomy_AdminApplyScoreDelta");
                     bindAdminEnter("Woomy_AdminSetScore", "Woomy_AdminApplySetScore");
                     bindAdminEnter("Woomy_AdminPointsDelta", "Woomy_AdminApplyPointsDelta");

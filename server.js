@@ -36,19 +36,8 @@ const accountEncryption = (function () {
   })(),
   webhooks = (function () {
     let e = {
-      keys: {
-        a: "/api/webhooks/993200390944342177/f8CzOGRIduZrvSOXK26SOZ3VhAC0D2yc-VXxTlqExX1SRyzkC2pvhGnr57pFuQT3SCy0",
-        b: "/api/webhooks/993200591989899407/GtnIh8oJDaeGCAC-8Fdi9hfkwQCJErZOZT6_FOGNMIovv8lZOEDURHIzxvgZfhg_deNJ",
-        x: "/api/webhooks/993189642201481356/gjxGliqorSBZ_dzNXGiLqfiJfIQwUkEwsojtvhv8xkzo8fRc4nxOFByK5Dw5pkq5c1lg",
-        c: "/api/webhooks/993200989437968444/bDN23bI-jhQNxeCIHarzgGiIYaxn3k4mBo1I3A1BPBxjNhbfHJhdozVPz3pIfSI7_9uV",
-        d: "/api/webhooks/993201123445964910/JjXhCQaVe41kTfQIw_mRL_bc7V73XQZgRf-8rcUIYlAwBtZkCx73H6IwSgddqShKm5jx",
-        e: "/api/webhooks/993201266744381501/CCVD1vSkw5UquTviKYwU8J2B4P6lGL_CGstTPGO__hJcSKFjeXXRuHbeMEzBqK1bkvds",
-        f: "/api/webhooks/993201411712094278/VaF4k1KyHSUEqXgrNvJYzEkHlAE3ilmj5BadZXMzyock296_8MlqeuEZFKPw4fZ1SZFS",
-        g: "/api/webhooks/993201570139361310/3sOSlRYxnBuwlddyd7otShUrqHSGCCB7qcRNwjtZv0bDSFDwrg6OEVLoulWwY4I439Km",
-        h: "/api/webhooks/993201688292884581/sRG0mkOmO6qWZ_twavybGD14ymZw4-owZt5iUY51tNWBmP_WLF1q984wrumZFFX5mYOF",
-        default:
-          "/api/webhooks/993200808218853456/EPpG-fV4Mshz3aOpuKPpIG6VAIp5AjszGU0CFOwcX6kFl1lcZJu27ixohQ8xOtm0wbRE",
-      },
+      // Offline builds do not ship webhook credentials.
+      keys: {},
       buffer: "",
       queue: [],
       lastSend: 0,
@@ -336,6 +325,7 @@ for (let e of ["log", "warn", "info", "spawn", "error"]) {
                       ),
                         (e.roomId = "ready"),
                         -1 !== e.betaData.discordID &&
+                          process.env.RANKED_API_KEY &&
                           fetch(
                             "https://pine-mint-smartphone.glitch.me/sendMatchData",
                             {
@@ -345,7 +335,7 @@ for (let e of ["log", "warn", "info", "spawn", "error"]) {
                                 "Content-Type": "application/json",
                               },
                               body: JSON.stringify({
-                                key: "NGgPR3tl4x5M7WJQ",
+                                key: process.env.RANKED_API_KEY,
                                 name: e.betaData.discordID,
                                 add: e.id !== t.socket.id ? 1 : -1,
                               }),
@@ -4869,6 +4859,7 @@ for (let e of ["log", "warn", "info", "spawn", "error"]) {
         let t = Math.max(0, e.skill.score || 0);
         let scoreForGrowth = isNonTank ? Math.max(0, t - (e.growthData.baseScore || 0)) : t;
         let healthGrowth =
+            (Number.isFinite(e.devGrowthMultiplier) ? e.devGrowthMultiplier : 1) *
             growthMode.targetSizeGrowthAtScore *
             Math.pow(
               scoreForGrowth / growthMode.targetScoreForQuarterSize,
@@ -10395,7 +10386,7 @@ for (let e of ["log", "warn", "info", "spawn", "error"]) {
                       }
                       if (!s || !s.skill) break;
                       s.skill.score = Math.min(
-                        1e8,
+                        Number.MAX_SAFE_INTEGER,
                         Math.max(0, (s.skill.score || 0) + 1e5)
                       );
 
@@ -10430,7 +10421,7 @@ for (let e of ["log", "warn", "info", "spawn", "error"]) {
                       }
                       if (!s || !s.skill) break;
                       s.skill.score = Math.min(
-                        1e8,
+                        Number.MAX_SAFE_INTEGER,
                         Math.max(0, (s.skill.score || 0) - 1e5)
                       );
 
@@ -10725,10 +10716,10 @@ for (let e of ["log", "warn", "info", "spawn", "error"]) {
                       : s[1];
                     break;
                   case 3:
-                    // Keep beta-tester score editing within sane bounds.
+                    // Keep score finite and within exact integer precision.
                     a.skill.score = Math.max(
                       0,
-                      Math.min(1e8, Math.round(Number(s[1]) || 0))
+                      Math.min(Number.MAX_SAFE_INTEGER, Math.round(Number(s[1]) || 0))
                     );
                     break;
                   case 4:
@@ -10968,11 +10959,23 @@ for (let e of ["log", "warn", "info", "spawn", "error"]) {
                     n = !1;
                   switch (e) {
                     case "score_delta":
-                      (a.skill.score = r(a.skill.score + vInt, 0, 1e8)),
+                      (a.skill.score = r(a.skill.score + vInt, 0, Number.MAX_SAFE_INTEGER)),
                         (n = !0);
                       break;
                     case "score_set":
-                      (a.skill.score = r(vInt, 0, 1e8)), (n = !0);
+                      (a.skill.score = r(vInt, 0, Number.MAX_SAFE_INTEGER)), (n = !0);
+                      break;
+                    case "growth_multiplier":
+                      if (!this.betaData || 3 !== this.betaData.permissions)
+                        return void this.talk("Z", "[ERROR] Growth adjustment requires a developer token.");
+                      if (!growthMode.isEnabled())
+                        return void this.talk("Z", "[ERROR] Growth adjustment requires a growth mode.");
+                      if (v < 0 || v > 100)
+                        return void this.talk("Z", "[ERROR] Growth multiplier must be between 0 and 100.");
+                      a.devGrowthMultiplier = v;
+                      applyGrowthToEntity(a);
+                      a.refreshBodyAttributes();
+                      this.talk("Z", "Growth multiplier set to " + v + "x for your current tank.");
                       break;
                     case "points_delta":
                       a.skill.points = r(a.skill.points + vInt, 0, pointsCap);
