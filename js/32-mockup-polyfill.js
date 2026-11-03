@@ -2591,7 +2591,7 @@
                                 window.__growthModePolyfill = selectedMode === "growth";
                                 if (!window.__woomyServerLoaded) {
                                     let scrpt = document.createElement("script")
-                                    scrpt.src = "./server.js?v=20260828a"
+                                    scrpt.src = "./server.js?v=20261103b"
                                     document.head.appendChild(scrpt)
                                     window.__woomyServerLoaded = true
                                 }
