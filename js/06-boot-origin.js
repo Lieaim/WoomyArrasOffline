@@ -555,6 +555,27 @@ if (growthBaseMode) {
     growthConfig.MODE = "ffa";
     modes.push(["growth", growthConfig]);
 
+    // 100x each dimension = 10,000x the area, with the normal food budget.
+    const massiveGrowthConfig = applyGrowthDefaults(cloneModeConfig(growthBaseMode));
+    massiveGrowthConfig.serverName = "Massive Growth";
+    massiveGrowthConfig.MODE = "ffa";
+    massiveGrowthConfig.WIDTH = Number(growthConfig.WIDTH || 6500) * 100;
+    massiveGrowthConfig.HEIGHT = Number(growthConfig.HEIGHT || 6500) * 100;
+    massiveGrowthConfig.FOOD_AMOUNT = Number(growthConfig.FOOD_AMOUNT ?? 0.2) / 10000;
+    massiveGrowthConfig.BOTS = 24;
+    massiveGrowthConfig.ROOM_SETUP = createGrowthTestingRoomSetup(
+        growthConfig.ROOM_SETUP, growthConfig.X_GRID, growthConfig.Y_GRID
+    );
+    // Open space avoids scaling obstacle populations with the enormous area.
+    const massiveRows = massiveGrowthConfig.ROOM_SETUP.length;
+    const massiveCols = massiveGrowthConfig.ROOM_SETUP[0].length;
+    massiveGrowthConfig.ROOM_SETUP[Math.floor(massiveRows / 2)][Math.floor(massiveCols / 2)] = "nest";
+    massiveGrowthConfig.X_GRID = massiveCols;
+    massiveGrowthConfig.Y_GRID = massiveRows;
+    massiveGrowthConfig.MAZE = Object.assign({}, massiveGrowthConfig.MAZE || {}, { ENABLED: false });
+    massiveGrowthConfig.PORTALS = Object.assign({}, massiveGrowthConfig.PORTALS || {}, { ENABLED: false });
+    modes.push(["massivegrowth", massiveGrowthConfig]);
+
     const growthTestingConfig = applyGrowthDefaults(cloneModeConfig(growthBaseMode));
     const baseWidth = Number(growthTestingConfig.WIDTH || 6500);
     const baseHeight = Number(growthTestingConfig.HEIGHT || 6500);
