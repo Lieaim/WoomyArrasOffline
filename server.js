@@ -6897,7 +6897,7 @@ for (let e of ["log", "warn", "info", "spawn", "error"]) {
           (this.range = this.RANGE),
           (this.fov =
             250 *
-            (null != this.devFovOverride ? this.devFovOverride : this.FOV) *
+            (this.label === "Scrollscope" && this.scrollFovOverride != null ? this.scrollFovOverride : null != this.devFovOverride ? this.devFovOverride : this.FOV) *
             Math.sqrt(this.size) *
             (1 + 0.003 * this.skill.level)),
           (this.density =
@@ -6910,7 +6910,7 @@ for (let e of ["log", "warn", "info", "spawn", "error"]) {
       refreshFOV() {
         this.fov =
           250 *
-          (null != this.devFovOverride ? this.devFovOverride : this.FOV) *
+          (this.label === "Scrollscope" && this.scrollFovOverride != null ? this.scrollFovOverride : null != this.devFovOverride ? this.devFovOverride : this.FOV) *
           Math.sqrt(this.size) *
           (1 + 0.003 * this.skill.level);
       }
@@ -11041,6 +11041,16 @@ for (let e of ["log", "warn", "info", "spawn", "error"]) {
                         room._worldEditObstacleCount = r(vInt, 0, cap);
                         room.regenerateObstacles(!1);
                       }
+                      break;
+                    case "scroll_fov":
+                      if (!this.betaData || this.betaData.permissions !== 3 ||
+                          !Class.scrollscope || a.index !== Class.scrollscope.index) break;
+                      if (!v) break;
+                      a.scrollFovOverride = r(
+                        (a.scrollFovOverride ?? a.devFovOverride ?? a.FOV) * (v > 0 ? 1.15 : 1 / 1.15),
+                        0.2, 20
+                      );
+                      a.refreshFOV && a.refreshFOV();
                       break;
                     case "fov_delta":
                     case "fov_set":

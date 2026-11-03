@@ -2271,6 +2271,17 @@
                                     }
                                 }
                             };
+                        // Scope wheel zoom to the Scrollscope tank and the game canvas.
+                        window.addEventListener("wheel", event => {
+                            const def = window.defExport && window.defExport.scrollscope;
+                            if (!global.gameStart || global.died || global.disconnected ||
+                                !def || gui.type !== def.index || !event.deltaY ||
+                                event.ctrlKey || !event.target || event.target.tagName !== "CANVAS") return;
+                            const sock = window.canvas && window.canvas.socket;
+                            if (!sock || typeof sock.talk !== "function") return;
+                            event.preventDefault();
+                            sock.talk("A", "scroll_fov", Math.sign(event.deltaY));
+                        }, { passive: false });
                         global.clearUpgrades = function () {
                             gui.upgrades = [];
                         };
@@ -2591,7 +2602,7 @@
                                 window.__growthModePolyfill = selectedMode === "growth";
                                 if (!window.__woomyServerLoaded) {
                                     let scrpt = document.createElement("script")
-                                    scrpt.src = "./server.js?v=20261103b"
+                                    scrpt.src = "./server.js?v=20261103d"
                                     document.head.appendChild(scrpt)
                                     window.__woomyServerLoaded = true
                                 }
